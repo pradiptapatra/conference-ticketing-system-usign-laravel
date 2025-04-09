@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Conference extends Model
 {
     use HasFactory;
-    protected $fillable = ['name', 'start_date', 'end_date'];
+    protected $fillable = ['title', 'start_date', 'end_date'];
 
     public function halls() {
         return $this->hasMany(Hall::class);

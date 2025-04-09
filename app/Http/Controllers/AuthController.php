@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -21,7 +22,7 @@ class AuthController extends Controller
 
             if (Auth::attempt($credentials)) {
                 $user = Auth::user();
-                $token = $user->createToken('API Token')->accessToken;
+                $token = $user->createToken('authToken')->accessToken;
 
                 return response()->json([
                     'message' => 'Login successful',
@@ -37,9 +38,10 @@ class AuthController extends Controller
                 'messages' => $e->errors()
             ], 422);
         } catch (Exception $e) {
+            Log::info($e);
             return response()->json([
                 'error' => 'Login failed',
-                'message' => $e->getMessage()
+                'message' => $e
             ], 500);
         }
     }
