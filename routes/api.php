@@ -7,6 +7,7 @@ use App\Http\Controllers\ConferenceController;
 use App\Http\Controllers\HallController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\SessionController;
+use App\Http\Controllers\IdentityCardController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -26,7 +27,11 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/halls', [HallController::class, 'store']);
     Route::post('/sessions', [SessionController::class, 'store']);
     Route::get('/sessions', [SessionController::class, 'index']);
-    Route::post('/sessions/{session}/book', [BookingController::class, 'book']);
+    Route::post('/sessions/{id}/book', [BookingController::class, 'book']);
     Route::delete('/tickets/{ticket}', [BookingController::class, 'cancel']);
-    Route::get('/tickets/{ticket}/identity-card', [BookingController::class, 'generate']);
+    Route::get('/tickets/{ticket}/identity-card', [IdentityCardController::class, 'generate']);
+
+    Route::get('/check-in/{ticket}', function ($ticket) {
+        return "Check-in for ticket $ticket";
+    })->name('check-in');
 });

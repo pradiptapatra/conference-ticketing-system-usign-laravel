@@ -8,6 +8,7 @@ use App\Interfaces\TicketInterface;
 use App\Http\Requests\StoreBookingRequest;
 use Illuminate\Support\Facades\DB;
 use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
 use App\Models\Session;
 use Exception;
 
@@ -21,31 +22,44 @@ class BookingController extends Controller
         $this->ticketInterface = $ticketInterface;
     }
 
-    public function book(StoreBookingRequest $request, Session $session) {
+    public function book(StoreBookingRequest $request, $sessionId)
+    {
         try {
-            $seat = $this->seatInterface->findAvailableBySession($session->id, $request->seat_id);
+            $seat = $this->seatInterface->findAvailableBySession($sessionId, $request->seat_id);
 
-            $ticket = DB::transaction(function () use ($seat, $session) {
+            $ticket = DB::transaction(function () use ($seat, $sessionId) {
                 $this->seatInterface->update($seat->id, ['status' => 'booked']);
+
                 $ticket = $this->ticketInterface->create([
                     'user_id' => auth()->id(),
-                    'session_id' => $session->id,
+                    'session_id' => $sessionId,
                     'seat_id' => $seat->id,
                     'status' => 'confirmed',
                 ]);
 
-                $qrCode = QrCode::create(route('check-in', $ticket->id))->setSize(300);
+                $qrCode = new QrCode(route('check-in', $ticket->id));
+                $writer = new PngWriter();
+                $result = $writer->write($qrCode, null, null, ['width' => 300, 'height' => 300]);
                 $qrCodePath = 'qr_' . $ticket->id . '.png';
-                $qrCode->writeFile(storage_path('app/public/' . $qrCodePath));
+                $result->saveToFile(storage_path('app/public/' . $qrCodePath));
 
-                $ticket->identityCard()->create(['qr_code' => $qrCodePath, 'generated_at' => now()]);
-               
+                $ticket->identityCard()->create([
+                    'qr_code' => $qrCodePath,
+                    'generated_at' => now()
+                ]);
+
                 return $ticket;
             });
 
-            return response()->json(['message' => 'Seat booked', 'ticket' => $ticket], 201);
+            return response()->json([
+                'message' => 'Seat booked',
+                'ticket' => $ticket
+            ], 201);
+
         } catch (Exception $e) {
-            return response()->json(['error' => 'Failed to book seat: ' . $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Failed to book seat: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -64,4 +78,6 @@ class BookingController extends Controller
             return response()->json(['error' => 'Failed to cancel booking: ' . $e->getMessage()], 500);
         }
     }
+
+    
 }

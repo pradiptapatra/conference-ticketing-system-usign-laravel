@@ -22,7 +22,7 @@ class StoreBookingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'seat_id' => 'required|exists:seats,id,session_id,' . $this->route('session')->id,
+            'seat_id' => 'required|exists:seats,id,session_id,' . $this->route('id'),
         ];
     }
 }

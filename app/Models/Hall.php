@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Hall extends Model
 {
     use HasFactory;
-    protected $fillable = ['conference_id', 'name', 'capacity'];
+    protected $fillable = ['name', 'conference_id', 'capacity'];
 
     public function conference() {
         return $this->belongsTo(Conference::class);
